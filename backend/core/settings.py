@@ -26,11 +26,37 @@ SECRET_KEY = 'django-insecure-t%=3ozib+0jg$u(8@edk6yvsnk)5n=_mx78(@w#jok8i&71f#b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # ADDING CORS HEADERS SETTINGS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False  # Set to False for security, use CORS_ALLOWED_ORIGINS instead
+
+# Allow all methods for API
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 # REST FRAMEWORK SETTINGS
@@ -59,6 +85,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'patients',
+    'appointments',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +97,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# Disable CSRF for API endpoints (handled by JWT authentication)
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 ROOT_URLCONF = 'core.urls'
