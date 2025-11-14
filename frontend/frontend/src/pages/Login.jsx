@@ -6,12 +6,19 @@ const Login = () => {
   const { loginUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await loginUser(formData.email, formData.password);
-    if (success) navigate("/dashboard");
-    else alert("Invalid credentials.");
+    try {
+      setError(null);
+      const success = await loginUser(formData.email, formData.password);
+      if (success) navigate("/dashboard");
+      else setError('Invalid credentials.');
+    } catch (err) {
+      console.error('Login error', err);
+      setError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -23,6 +30,7 @@ const Login = () => {
         <h2 className="text-2xl font-bold mb-4 text-center text-blue-600">
           Patient Login
         </h2>
+
         <input
           type="text"
           placeholder="Username"
@@ -33,6 +41,7 @@ const Login = () => {
           }
           required
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -43,6 +52,13 @@ const Login = () => {
           }
           required
         />
+
+        {error && (
+          <div className="text-red-600 text-sm mb-3" role="alert">
+            {error}
+          </div>
+        )}
+
         <button
           type="submit"
           className="bg-blue-600 text-white py-2 rounded w-full"
