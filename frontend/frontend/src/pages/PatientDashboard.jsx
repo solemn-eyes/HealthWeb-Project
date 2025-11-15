@@ -1,134 +1,115 @@
-import React, { useEffect, useState } from "react";
-import { Calendar, FileText, Heart, User } from "lucide-react";
-import { getProfile, getAppointments, getLastVisit, getRecordCount } from "../services/patientApi";
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
-
-const StatCard = ({ title, value, icon }) => (
-  <div className="bg-white p-5 rounded-lg shadow hover:shadow-lg transition">
-    <div className="flex items-center space-x-4">
-      <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded">
-        {icon}
-      </div>
-      <div>
-        <h4 className="text-sm text-gray-500">{title}</h4>
-        <p className="text-lg font-semibold">{value}</p>
-      </div>
-    </div>
-  </div>
-);
+import { useEffect, useState } from "react";
+import WelcomeBanner from "./WelcomeBanner";
+import Sidebar from "./Sidebar";
+import {
+  getAppointments,
+  getLastVisit,
+  getRecordCount,
+  getProfile
+} from "../services/patientApi";
+import { Calendar, ClipboardList, FileText } from "lucide-react";
+import { motion } from "framer-motion";
 
 
 export default function PatientDashboard() {
-  const { authTokens } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const [appointments, setAppointments] = useState([]);
+  const [user, setUser] = useState({});
   const [nextAppointment, setNextAppointment] = useState(null);
   const [lastVisit, setLastVisit] = useState(null);
   const [recordCount, setRecordCount] = useState(0);
 
-
   useEffect(() => {
-    const load = async () => {
-      try {
-        const p = await getProfile();
-        setProfile(p);
-        const appts = await getAppointments();
-        setAppointments(appts);
-        
-        // Try to get last visit, but it's okay if it's null (no previous visits)
-        try {
-          const last = await getLastVisit();
-          setLastVisit(last || null);
-        } catch (err) {
-          console.error("Error loading last visit:", err);
-          setLastVisit(null);
-        }
-        
-        const recs = await getRecordCount();
-        setRecordCount(recs);
+    const fetchData = async () => {
+      const profile = await getProfile();
+      const appts = await getAppointments();
+      const last = await getLastVisit();
+      const recs = await getRecordCount();
 
-        const futureAppts = appts.filter(a => new Date(a.date) >= new Date());
-        setNextAppointment(futureAppts[0] || null);
-      } catch (err) {
-        console.error("Failed to load dashboard data:", err);
-      }
+      setUser(profile);
+      setRecordCount(recs);
+
+      const futureAppts = appts.filter(a => new Date(a.date) >= new Date());
+      setNextAppointment(futureAppts[0] || null);
+      setLastVisit(last || null);
     };
-    load();
-  }, [authTokens]);
 
-
+    fetchData();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <header className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Hello, {profile?.username ?? "Patient"}</h1>
-          <p className="text-sm text-gray-500">Welcome back — here's your health overview.</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <div className="text-right">
-            <div className="text-sm text-gray-500">Account</div>
-            <div className="font-medium">{profile?.email}</div>
-          </div>
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white">
-            <User size={20} />
-          </div>
-        </div>
-      </header>
+    <div className="flex bg-gray-50 min-h-screen">
+      <Sidebar />
+      <div className="p-6 space-y-6 flex-1">
+        <WelcomeBanner user={user} />
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div onClick={() => navigate("/dashboard/appointments")} className="cursor-pointer">
-          <StatCard 
+        {/* Stats */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.15
+              }
+            }
+          }}
+        >
+          {/* Next Appointment */}
+          <DashboardCard
+            color="from-teal-500 to-teal-600"
+            icon={<Calendar />}
             title="Next Appointment"
             value={
-              nextAppointment 
-                ? `${nextAppointment.date} at ${nextAppointment.time}`
+              nextAppointment
+                ? `${nextAppointment.date} • ${nextAppointment.time}`
                 : "No upcoming appointments"
             }
-            icon={<Calendar />}
           />
-        </div>
-        <div onClick={() => navigate("/dashboard/appointments")} className="cursor-pointer">
-          <StatCard 
+
+          {/* Last Visit */}
+          <DashboardCard
+            color="from-blue-500 to-blue-600"
+            icon={<ClipboardList />}
             title="Last Visit"
             value={
-              lastVisit 
-                ? `${lastVisit.date} at ${lastVisit.time}`
-                : "No previous visits"
+              lastVisit
+                ? `${lastVisit.date} • ${lastVisit.time}`
+                : "No recent visits"
             }
-            icon={<Heart />}
           />
-        </div>
-        <div onClick={() => navigate("/dashboard/records")} className="cursor-pointer">
-          <StatCard 
-            title="Medical Records"
-            value={`${recordCount} records`}
+
+          {/* Records */}
+          <DashboardCard
+            color="from-orange-500 to-orange-600"
             icon={<FileText />}
+            title="Medical Records"
+            value={`${recordCount} Record(s)`}
           />
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link to="/dashboard/appointments" className="p-4 bg-white rounded-lg shadow hover:bg-blue-50 transition">
-          <h3 className="font-semibold mb-2">Appointments</h3>
-          <p className="text-sm text-gray-500">Book, view or cancel appointments</p>
-        </Link>
-
-        <Link to="/dashboard/records" className="p-4 bg-white rounded-lg shadow hover:bg-blue-50 transition">
-          <h3 className="font-semibold mb-2">Medical Records</h3>
-          <p className="text-sm text-gray-500">View your records and downloads</p>
-        </Link>
-
-        <Link to="/dashboard/prescriptions" className="p-4 bg-white rounded-lg shadow hover:bg-blue-50 transition">
-          <h3 className="font-semibold mb-2">Prescriptions</h3>
-          <p className="text-sm text-gray-500">Active & past prescriptions</p>
-        </Link>
-      </section>
-
-
+        </motion.div>
+      </div>
     </div>
+  );
+}
+
+function DashboardCard({ icon, title, value, color }) {
+  return (
+    <motion.div 
+      className="bg-white p-5 rounded-xl shadow hover:shadow-md transition cursor-pointer"
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+      }}
+      transition={{ duration: 0.4 }}
+      whileHover={{ scale: 1.03, y: -5 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <div className={`w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br ${color} text-white mb-4`}>
+        {icon}
+      </div>
+      <h3 className="text-lg font-semibold">{title}</h3>
+      <p className="text-gray-600 mt-1">{value}</p>
+    </motion.div>
   );
 }
