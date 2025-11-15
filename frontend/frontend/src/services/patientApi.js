@@ -45,3 +45,14 @@ export const updateProfile = async (data) => {
   const res = await apiClient.patch('/patients/me/update/', data);
   return res.data;
 };
+
+export const uploadProfilePicture = async (file) => {
+  const formData = new FormData();
+  formData.append("profile_picture", file);
+
+  const res = await apiClient.patch("/patients/me/update/", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+
+  return res.data;
+};
