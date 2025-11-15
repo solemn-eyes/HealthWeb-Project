@@ -7,6 +7,7 @@ class Patient(AbstractUser):
     phone = models.CharField(max_length=15, blank=True)
     gender = models.CharField(max_length=10, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
 
     def __str__(self):
         return self.username
