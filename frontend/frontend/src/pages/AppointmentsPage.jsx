@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { getAppointments, createAppointment, cancelAppointment } from "../services/patientApi";
+import { useEffect, useState } from "react";
+import { getAppointments } from "../services/patientApi";
+import { motion } from "framer-motion";
+import { Calendar, Clock, ChevronDown } from "lucide-react";
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
-  const [form, setForm] = useState({ doctor_name: '', department: '', date: '', time: '' });
+  const [openId, setOpenId] = useState(null);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const a = await getAppointments();
-        setAppointments(a);
+        const data = await getAppointments();
+        setAppointments(data);
       } catch (err) {
         console.error("Failed to load appointments:", err);
       }
@@ -17,54 +19,45 @@ export default function AppointmentsPage() {
     load();
   }, []);
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    try {
-      const newAppt = await createAppointment(form);
-      setAppointments(prev => [newAppt, ...prev]);
-      setForm({ doctor_name: '', department: '', date: '', time: '' });
-    } catch (err) {
-      console.error("Failed to create appointment:", err);
-      alert("Failed to create appointment. Please try again.");
-    }
-  };
-
-  const handleCancel = async (id) => {
-    try {
-      await cancelAppointment(id);
-      setAppointments(prev => prev.map(a => a.id === id ? {...a, status: 'cancelled'} : a));
-    } catch (err) {
-      console.error("Failed to cancel appointment:", err);
-      alert("Failed to cancel appointment. Please try again.");
-    }
-  };
-
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <h2 className="text-xl font-semibold mb-4">Appointments</h2>
+    <div className="p-6 space-y-6">
+      <h2 className="text-2xl font-semibold">Your Appointments</h2>
 
-      <form onSubmit={handleCreate} className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-2">
-        <input value={form.doctor_name} onChange={e=>setForm({...form, doctor_name:e.target.value})} placeholder="Doctor name" className="p-2 rounded border" required/>
-        <input value={form.department} onChange={e=>setForm({...form, department:e.target.value})} placeholder="Department" className="p-2 rounded border" required/>
-        <input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="p-2 rounded border" required/>
-        <input type="time" value={form.time} onChange={e=>setForm({...form, time:e.target.value})} className="p-2 rounded border" required/>
-        <button type="submit" className="md:col-span-4 bg-blue-600 text-white py-2 rounded">Book Appointment</button>
-      </form>
+      {appointments.map((appt, index) => (
+        <motion.div
+          key={appt.id}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.1 }}
+          className="bg-white p-4 shadow rounded-xl border cursor-pointer"
+          onClick={() => setOpenId(openId === appt.id ? null : appt.id)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold">{appt.doctor_name}</p>
+              <p className="text-gray-500 flex items-center gap-2">
+                <Calendar className="w-4" /> {appt.date}
+              </p>
+            </div>
 
-      <div className="space-y-3">
-        {appointments.length === 0 && <div className="text-gray-500">No appointments yet.</div>}
-        {appointments.map(appt => (
-          <div key={appt.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
-            <div>
-              <div className="font-medium">{appt.department} — {appt.doctor_name}</div>
-              <div className="text-sm text-gray-500">{appt.date} at {appt.time} • {appt.status}</div>
-            </div>
-            <div>
-              {appt.status !== 'cancelled' && <button onClick={()=>handleCancel(appt.id)} className="text-red-600">Cancel</button>}
-            </div>
+            <ChevronDown className={`transition ${openId === appt.id ? "rotate-180" : ""}`} />
           </div>
-        ))}
-      </div>
+
+          {openId === appt.id && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-4 text-gray-600 space-y-2"
+            >
+              <p className="flex items-center gap-2">
+                <Clock className="w-4" /> {appt.time}
+              </p>
+              <p>Reason: {appt.reason}</p>
+              <p>Status: <span className="font-semibold text-blue-600">{appt.status}</span></p>
+            </motion.div>
+          )}
+        </motion.div>
+      ))}
     </div>
   );
 }

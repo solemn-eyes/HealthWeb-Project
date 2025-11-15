@@ -126,9 +126,16 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f"Error creating user: {error_message}")
 
 class PatientSerializer(serializers.ModelSerializer):
+
+    
+    profile_picture = serializers.ImageField(required=False)
+
     class Meta:
         model = Patient
-        fields = ['id', 'username', 'email', 'phone',]
+        fields = [
+            'id', 'username', 'email', 'phone', 'gender',
+            'date_of_birth', 'first_name', 'last_name', 'profile_picture'
+        ]
         read_only_fields = ['id']
 
     def validate_email(self, value):

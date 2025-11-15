@@ -1,56 +1,69 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { getRecords } from "../services/patientApi";
+import { motion } from "framer-motion";
+import { FileText, ChevronDown } from "lucide-react";
 
 export default function RecordsPage() {
   const [records, setRecords] = useState([]);
+  const [openId, setOpenId] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
+    const fetch = async () => {
       try {
-        const r = await getRecords();
-        setRecords(r);
+        const data = await getRecords();
+        setRecords(data);
       } catch (err) {
         console.error("Failed to load records:", err);
       }
     };
-    load();
+    fetch();
   }, []);
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <h2 className="text-xl font-semibold mb-4">Medical Records</h2>
+    <div className="p-6 space-y-6">
+      <h2 className="text-2xl font-semibold">Your Medical Records</h2>
 
-      <div className="space-y-3">
-        {records.length === 0 && (
-          <div className="text-gray-500">You have no medical records yet.</div>
-        )}
-
-        {records.map((rec) => (
-          <div
-            key={rec.id}
-            className="bg-white p-4 rounded-lg shadow flex justify-between items-center"
-          >
-            <div>
-              <div className="font-medium">{rec.title}</div>
-              <div className="text-sm text-gray-500">
-                {rec.created_at.substring(0, 10)}
+      {records.map((record, index) => (
+        <motion.div
+          key={record.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+          onClick={() => setOpenId(openId === record.id ? null : record.id)}
+          className="bg-white p-4 rounded-xl border shadow hover:shadow-md cursor-pointer"
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <FileText className="text-teal-600" />
+              <div>
+                <p className="font-semibold">{record.title}</p>
+                <p className="text-gray-500 text-sm">{record.date}</p>
               </div>
-              <div className="mt-1 text-gray-600 text-sm">{rec.notes}</div>
             </div>
 
-            {rec.file && (
-              <a
-                href={rec.file}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                Download
-              </a>
-            )}
+            <ChevronDown className={`transition ${openId === record.id ? "rotate-180" : ""}`} />
           </div>
-        ))}
-      </div>
+
+          {openId === record.id && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-3 text-gray-700"
+            >
+              <p>{record.description}</p>
+              {record.file && (
+                <a
+                  href={record.file}
+                  target="_blank"
+                  className="text-blue-600 underline mt-2 block"
+                >
+                  View Attached File
+                </a>
+              )}
+            </motion.div>
+          )}
+        </motion.div>
+      ))}
     </div>
   );
 }
