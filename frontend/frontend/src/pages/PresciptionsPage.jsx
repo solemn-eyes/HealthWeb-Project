@@ -6,8 +6,12 @@ export default function PrescriptionsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const p = await getPrescriptions();
-      setPrescriptions(p);
+      try {
+        const p = await getPrescriptions();
+        setPrescriptions(p);
+      } catch (err) {
+        console.error("Failed to load prescriptions:", err);
+      }
     };
     load();
   }, []);
