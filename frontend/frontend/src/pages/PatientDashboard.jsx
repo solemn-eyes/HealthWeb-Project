@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, FileText, Heart, User } from "lucide-react";
-import { getProfile, getAppointments } from "../services/patientApi";
+import { getProfile, getAppointments, getLastVisit, getRecordCount } from "../services/patientApi";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const StatCard = ({ title, value, icon }) => (
   <div className="bg-white p-5 rounded-lg shadow hover:shadow-lg transition">
@@ -22,24 +22,44 @@ const StatCard = ({ title, value, icon }) => (
 
 export default function PatientDashboard() {
   const { authTokens } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const [nextAppointment, setNextAppointment] = useState(null);
+  const [lastVisit, setLastVisit] = useState(null);
+  const [recordCount, setRecordCount] = useState(0);
+
 
   useEffect(() => {
     const load = async () => {
       try {
         const p = await getProfile();
         setProfile(p);
-        const a = await getAppointments();
-        setAppointments(a);
+        const appts = await getAppointments();
+        setAppointments(appts);
+        
+        // Try to get last visit, but it's okay if it's null (no previous visits)
+        try {
+          const last = await getLastVisit();
+          setLastVisit(last || null);
+        } catch (err) {
+          console.error("Error loading last visit:", err);
+          setLastVisit(null);
+        }
+        
+        const recs = await getRecordCount();
+        setRecordCount(recs);
+
+        const futureAppts = appts.filter(a => new Date(a.date) >= new Date());
+        setNextAppointment(futureAppts[0] || null);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load dashboard data:", err);
       }
     };
     load();
   }, [authTokens]);
 
-  const nextAppt = appointments.length ? `${appointments[0].date} ${appointments[0].time}` : "No upcoming";
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -60,9 +80,35 @@ export default function PatientDashboard() {
       </header>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard title="Next Appointment" value={nextAppt} icon={<Calendar />} />
-        <StatCard title="Last Visit" value="3 months ago" icon={<Heart />} />
-        <StatCard title="Records" value="View records" icon={<FileText />} />
+        <div onClick={() => navigate("/dashboard/appointments")} className="cursor-pointer">
+          <StatCard 
+            title="Next Appointment"
+            value={
+              nextAppointment 
+                ? `${nextAppointment.date} at ${nextAppointment.time}`
+                : "No upcoming appointments"
+            }
+            icon={<Calendar />}
+          />
+        </div>
+        <div onClick={() => navigate("/dashboard/appointments")} className="cursor-pointer">
+          <StatCard 
+            title="Last Visit"
+            value={
+              lastVisit 
+                ? `${lastVisit.date} at ${lastVisit.time}`
+                : "No previous visits"
+            }
+            icon={<Heart />}
+          />
+        </div>
+        <div onClick={() => navigate("/dashboard/records")} className="cursor-pointer">
+          <StatCard 
+            title="Medical Records"
+            value={`${recordCount} records`}
+            icon={<FileText />}
+          />
+        </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -81,6 +127,8 @@ export default function PatientDashboard() {
           <p className="text-sm text-gray-500">Active & past prescriptions</p>
         </Link>
       </section>
+
+
     </div>
   );
 }
