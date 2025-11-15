@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { getProfile, updateProfile } from "../services/patientApi";
+import { motion } from "framer-motion";
+import { getProfile, updateProfile, uploadProfilePicture } from "../services/patientApi";
 
 export default function ProfilePage() {
   const [form, setForm] = useState({
@@ -8,6 +9,7 @@ export default function ProfilePage() {
     phone: "",
     gender: "",
     date_of_birth: "",
+    profile_picture: "",
   });
 
   const [message, setMessage] = useState("");
@@ -23,6 +25,7 @@ export default function ProfilePage() {
           phone: data.phone || "",
           gender: data.gender || "",
           date_of_birth: data.date_of_birth || "",
+          profile_picture: data.profile_picture || "",
         });
       } catch (err) {
         console.error("Failed to load profile:", err);
@@ -48,9 +51,51 @@ export default function ProfilePage() {
     }
   };
 
+  const handleProfilePictureUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setMessage("");
+    try {
+      const result = await uploadProfilePicture(file);
+      // Reload profile to get updated picture URL
+      const data = await getProfile();
+      setForm(prev => ({
+        ...prev,
+        profile_picture: data.profile_picture || prev.profile_picture
+      }));
+      setMessage("Profile picture updated successfully!");
+      setMessageType("success");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      console.error("Failed to upload profile picture:", err);
+      setMessage("Failed to upload profile picture. Please try again.");
+      setMessageType("error");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <h2 className="text-xl font-semibold mb-4">Update Profile</h2>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }} 
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col items-center gap-3 mb-6"
+      >
+  <img
+    src={form.profile_picture ? form.profile_picture : "/images/default-avatar.png"}
+    className="w-28 h-28 object-cover rounded-full shadow"
+    alt="Profile"
+  />
+
+  <label className="cursor-pointer bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+    Change Photo
+    <input type="file" className="hidden" onChange={handleProfilePictureUpload} />
+  </label>
+</motion.div>
+
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         
