@@ -30,3 +30,18 @@ export const getRecords = async () => {
   const res = await apiClient.get('/records/');
   return res.data;
 };
+
+export const getLastVisit = async () => {
+  const res = await apiClient.get('/last-visit/');
+  return res.data;
+};
+
+export const getRecordCount = async () => {
+  const res = await apiClient.get('/record-count/');
+  return res.data.count;
+};
+
+export const updateProfile = async (data) => {
+  const res = await apiClient.patch('/patients/me/update/', data);
+  return res.data;
+};
