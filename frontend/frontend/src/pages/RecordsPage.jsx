@@ -6,8 +6,12 @@ export default function RecordsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const r = await getRecords();
-      setRecords(r);
+      try {
+        const r = await getRecords();
+        setRecords(r);
+      } catch (err) {
+        console.error("Failed to load records:", err);
+      }
     };
     load();
   }, []);
