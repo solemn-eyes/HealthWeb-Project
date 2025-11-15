@@ -99,6 +99,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         return value
 
+    def validate(self, data):
+        """Normalize email and username in validated data"""
+        if 'email' in data:
+            data['email'] = data['email'].lower().strip()
+        if 'username' in data:
+            data['username'] = data['username'].strip()
+        return data
+
     def create(self, validated_data):
         try:
             user = Patient.objects.create_user(
@@ -116,3 +124,16 @@ class RegisterSerializer(serializers.ModelSerializer):
                 elif 'email' in error_message.lower():
                     raise serializers.ValidationError({"email": ["A user with this email already exists."]})
             raise serializers.ValidationError(f"Error creating user: {error_message}")
+
+class PatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ['id', 'username', 'email', 'phone',]
+        read_only_fields = ['id']
+
+    def validate_email(self, value):
+        user = self.context['request'].user
+        if Patient.objects.exclude(pk=user.pk).filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+    
