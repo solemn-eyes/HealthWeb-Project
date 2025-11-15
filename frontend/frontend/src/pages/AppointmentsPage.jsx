@@ -7,22 +7,36 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const a = await getAppointments();
-      setAppointments(a);
+      try {
+        const a = await getAppointments();
+        setAppointments(a);
+      } catch (err) {
+        console.error("Failed to load appointments:", err);
+      }
     };
     load();
   }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    const newAppt = await createAppointment(form);
-    setAppointments(prev => [newAppt, ...prev]);
-    setForm({ doctor_name: '', department: '', date: '', time: '' });
+    try {
+      const newAppt = await createAppointment(form);
+      setAppointments(prev => [newAppt, ...prev]);
+      setForm({ doctor_name: '', department: '', date: '', time: '' });
+    } catch (err) {
+      console.error("Failed to create appointment:", err);
+      alert("Failed to create appointment. Please try again.");
+    }
   };
 
   const handleCancel = async (id) => {
-    await cancelAppointment(id);
-    setAppointments(prev => prev.map(a => a.id === id ? {...a, status: 'cancelled'} : a));
+    try {
+      await cancelAppointment(id);
+      setAppointments(prev => prev.map(a => a.id === id ? {...a, status: 'cancelled'} : a));
+    } catch (err) {
+      console.error("Failed to cancel appointment:", err);
+      alert("Failed to cancel appointment. Please try again.");
+    }
   };
 
   return (

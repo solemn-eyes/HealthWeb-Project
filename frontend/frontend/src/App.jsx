@@ -5,13 +5,14 @@ import PatientDashboard from './pages/PatientDashboard'
 import AppointmentsPage from './pages/AppointmentsPage'
 import RecordsPage from './pages/RecordsPage'
 import PrescriptionsPage from './pages/PresciptionsPage'
+import ProfilePage from './pages/ProfilePage'
 import { useContext } from 'react'
 import { AuthContext } from './context/AuthContext'
 import './App.css'
 
 function PrivateRoute({ children }) {
   const { authTokens } = useContext(AuthContext);
-  return authTokens ? children : <PatientDashboard />;
+  return authTokens ? children : <Login />;
 }
 
 function App() {
@@ -40,6 +41,13 @@ function App() {
             <PrescriptionsPage />
           </PrivateRoute>
         } />
+        <Route path="/dashboard/profile" 
+          element={
+            <PrivateRoute>
+              <ProfilePage />
+            </PrivateRoute>
+          }
+        />
         
       </Routes>
     </Router>

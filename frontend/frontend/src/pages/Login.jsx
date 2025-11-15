@@ -33,7 +33,7 @@ const Login = () => {
 
         <input
           type="text"
-          placeholder="Username"
+          placeholder="Username or Email"
           className="border p-2 mb-3 w-full rounded"
           value={formData.email}
           onChange={(e) =>
