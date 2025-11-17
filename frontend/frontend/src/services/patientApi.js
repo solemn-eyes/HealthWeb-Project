@@ -11,7 +11,6 @@ export const getAppointments = async () => {
 };
 
 export const createAppointment = async (payload) => {
-  // payload: { doctor_name, department, date, time }
   const res = await apiClient.post('/appointments/', payload);
   return res.data;
 };
@@ -20,6 +19,7 @@ export const cancelAppointment = async (id) => {
   const res = await apiClient.patch(`/appointments/${id}/`, { status: 'cancelled' });
   return res.data;
 };
+
 
 export const getPrescriptions = async () => {
   const res = await apiClient.get('/prescriptions/');
