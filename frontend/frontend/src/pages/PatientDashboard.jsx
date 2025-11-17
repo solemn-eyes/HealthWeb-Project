@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import WelcomeBanner from "./WelcomeBanner";
-import Sidebar from "./Sidebar";
 import {
   getAppointments,
   getLastVisit,
@@ -36,59 +35,53 @@ export default function PatientDashboard() {
   }, []);
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
-      <Sidebar />
-      <div className="p-6 space-y-6 flex-1">
-        <WelcomeBanner user={user} />
+    <div className="space-y-6">
+      <WelcomeBanner user={user} />
 
-        {/* Stats */}
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.15
-              }
+      {/* Stats */}
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.15
             }
-          }}
-        >
-          {/* Next Appointment */}
-          <DashboardCard
-            color="from-teal-500 to-teal-600"
-            icon={<Calendar />}
-            title="Next Appointment"
-            value={
-              nextAppointment
-                ? `${nextAppointment.date} • ${nextAppointment.time}`
-                : "No upcoming appointments"
-            }
-          />
+          }
+        }}
+      >
+        <DashboardCard
+          color="from-teal-500 to-teal-600"
+          icon={<Calendar />}
+          title="Next Appointment"
+          value={
+            nextAppointment
+              ? `${nextAppointment.date} • ${nextAppointment.time}`
+              : "No upcoming appointments"
+          }
+        />
 
-          {/* Last Visit */}
-          <DashboardCard
-            color="from-blue-500 to-blue-600"
-            icon={<ClipboardList />}
-            title="Last Visit"
-            value={
-              lastVisit
-                ? `${lastVisit.date} • ${lastVisit.time}`
-                : "No recent visits"
-            }
-          />
+        <DashboardCard
+          color="from-blue-500 to-blue-600"
+          icon={<ClipboardList />}
+          title="Last Visit"
+          value={
+            lastVisit
+              ? `${lastVisit.date} • ${lastVisit.time}`
+              : "No recent visits"
+          }
+        />
 
-          {/* Records */}
-          <DashboardCard
-            color="from-orange-500 to-orange-600"
-            icon={<FileText />}
-            title="Medical Records"
-            value={`${recordCount} Record(s)`}
-          />
-        </motion.div>
-      </div>
+        <DashboardCard
+          color="from-orange-500 to-orange-600"
+          icon={<FileText />}
+          title="Medical Records"
+          value={`${recordCount} Record(s)`}
+        />
+      </motion.div>
     </div>
   );
 }
