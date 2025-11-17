@@ -36,14 +36,9 @@ def register_view(request):
 def patient_profile_view(request):
     """Get current authenticated patient's profile"""
     user = request.user
-    return Response({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'phone': user.phone or '',
-        'gender': user.gender or '',
-        'date_of_birth': user.date_of_birth.isoformat() if user.date_of_birth else None,
-    }, status=status.HTTP_200_OK)
+    # Serialize the user so we can include fields like profile_picture with full URL
+    serializer = PatientSerializer(user, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PatientUpdateView(generics.RetrieveUpdateAPIView):
     serializer_class = PatientSerializer
